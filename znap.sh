@@ -1,6 +1,14 @@
 #!/bin/bash
 # (c) LucidBrot 2020
-ZNAPLOGFILE='/opt/znap/messages.txt'
+set -e
+
+# --- Customizable Options
+ZNAPLOGFILE='/opt/znap/messages.txt'            # where the logs are stored
+SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
+DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take snapshot of
+RECURSIVE=1                                     # set to 0 if you want a non-recursive snapshot
+
+# --- Functions ---
 
 usage(){
 # cat << EOF  means that cat sould stop reading when EOF is detected
@@ -50,8 +58,12 @@ if [ -z "$target" ] || [ -z "$commit_message" ]; then
     exit 1
 fi
 
+# create log dir
+sudo mkdir -p 
 # --- Snapshot Creation ---
 if [[ $verbosity > 0 ]] ; then
     echo -e "commit message:\t$commit_message"
     echo -e "target:\t\t$target"
 fi
+
+sudo zfs snapshot 
