@@ -1,13 +1,17 @@
 #!/bin/bash
 # (c) LucidBrot 2020
+ZNAPLOGFILE='/opt/znap/messages.txt'
 
 usage(){
 # cat << EOF  means that cat sould stop reading when EOF is detected
 cat << EOF
 Usage:
     znap -t tank/DATASET -m "COMMIT_MESSAGE"        creates a snapshot
+        [-q]                                        quiet
 EOF
 }
+
+# ---- Parsing ----
 
 if [ -z "$1" ];
 then
@@ -15,13 +19,17 @@ then
     exit 1
 fi
 
-while getopts ":t:hm:" arg; do
+verbosity=1
+while getopts ":t:hm:q" arg; do
     case $arg in
         t)
             target=${OPTARG}
             ;;
         m)
             commit_message=${OPTARG}
+            ;;
+        q)
+            verbosity=0
             ;;
         h | *)
             usage
@@ -41,4 +49,9 @@ if [ -z "$target" ] || [ -z "$commit_message" ]; then
     usage
     exit 1
 fi
-echo "commit message: $commit_message,\ntarget: $target\n"
+
+# --- Snapshot Creation ---
+if [[ $verbosity > 0 ]] ; then
+    echo -e "commit message:\t$commit_message"
+    echo -e "target:\t\t$target"
+fi
