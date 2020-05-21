@@ -2,7 +2,8 @@
 znap -t tank/ds1/u18 -m COMMIT_MESSAGE
 ```
 
-Creates a snapshot of the dataset `tank/ds1/u18` and stores `COMMIT_MESSAGE` in a file at `/opt/znap`.
+Creates a snapshot of the dataset `tank/ds1/u18` and stores `COMMIT_MESSAGE` in a file at `/opt/znap` (modify the script to fit your liking).
+Be aware that the commit messages are only in one file and hence will not automatically be backed up. But they are written before the snapshot is taken, so if you snapshot the dataset where the logfile is stored, it will save the new commit message as well.
 
 
 

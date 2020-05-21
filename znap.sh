@@ -31,7 +31,7 @@ Usage:
 EOF
 }
 
-# $1: The target dataset full path
+# $1: The target dataset full path including suffix
 # $2: The message
 # 
 # The stored output is for viewing with `column -t -s$'\t' <.znap_log`
@@ -42,7 +42,8 @@ znaplog(){
     splitted_msg_with_initial_tab=$(echo "$the_message" | tr '\n' '\0' | xargs -0 -n1 echo $'\t')
     splitted_msg=${splitted_msg_with_initial_tab#?}
     msg_as_lines=$(echo "$splitted_msg" | sed -r "s/(.{$MSGWIDTH})/\1$LINESEP$SEP/g")
-    echo -e >>"${ZNAPLOGFILE}" "$1$SUFFIX$SEP$msg_as_lines$BIGSEP"
+    echo -e >>"${ZNAPLOGFILE}" "$1$SEP$msg_as_lines$BIGSEP"
+    # todo write as sudo?
 }
 
 # $1: list of paths like this:
@@ -73,7 +74,7 @@ then
     exit 1
 fi
 
-if [[ "x$1" == "xlog" ]]; then
+if [[ "x$1" = "xlog" ]]; then
     read_log
     exit 0
 fi
@@ -129,21 +130,32 @@ if [[ ! -z $set_r && ! -z $set_R ]]; then
 fi
 
 # --- Snapshot Creation ---
-if [[ $verbosity > 1 ]] ; then
+# store the commit messages first, so that they will be part of the snapshots
+# create log dir 
+$sudo mkdir -p "${ZNAPLOGFILEDIR}"
+$sudo touch "${ZNAPLOGFILE}"
+snapshotpath="$target$SUFFIX"
+logfilepath=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
+
+# log a few things to stdout
+if [[ $verbosity > 0 ]] ; then
     echo -e "message:\t$commit_message"
     echo -e "target:\t\t$target"
     echo -e "suffix:\t\t$SUFFIX"
 fi
+if [[ $verbosity > 1 ]] ; then
+    echo -e "logfilepath:\t\t$logfilepath"
+fi
 
-# store the commit messages first, so that they will be part of the snapshots
-# create log dir # TODO: place the logs actually in the dataset roots
-$sudo mkdir -p "${ZNAPLOGFILEDIR}"
-$sudo touch "${ZNAPLOGFILE}"
-datasetpath="$target"
-logfilepath=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
-echo "logfilepath: "$logfilepath
-znaplog "$datasetpath" "$commit_message"
+# store the commit message to file
+znaplog "$snapshotpath" "$commit_message"
 
-
-#sudo zfs snapshot 
+# actually perform the snapshot
+r_flag='-r'
+if [[ recursiveness = 0 ]]; then
+    r_flag=''
+fi
+$sudo zfs snapshot $r_flag $snapshotpath
 #TODO: actually run the snapshot
+#       including the -r / -R switch
+#TODO: see log of only one dataset.
