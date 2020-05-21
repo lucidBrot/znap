@@ -12,7 +12,9 @@ DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take 
 # set to sudo when used on a platform that has sudo
 sudo=''
 SEP='\t'
+LINESEP='\n'
 BIGSEP='\n'
+MSGWIDTH=52
 
 # --- Functions ---
 
@@ -29,8 +31,16 @@ EOF
 
 # $1: The target dataset full path
 # $2: The message
+# 
+# The stored output is for viewing with `column -t -s$'\t' <.znap_log`
 znaplog(){
-    echo -e >>"${ZNAPLOGFILE}" "$1$SUFFIX$SEP$2$BIGSEP"
+    the_message=$2
+    # split the message on user-set newlines so that they will remain. Prefix each of them with a tab character.
+    # That includes the first line, so we will later have to remove that again.
+    splitted_msg_with_initial_tab=$(echo "$the_message" | tr '\n' '\0' | xargs -0 -n1 echo $'\t')
+    splitted_msg=${splitted_msg_with_initial_tab#?}
+    msg_as_lines=$(echo "$splitted_msg" | sed -r "s/(.{$MSGWIDTH})/\1$LINESEP$SEP/g")
+    echo -e >>"${ZNAPLOGFILE}" "$1$SUFFIX$SEP$msg_as_lines$BIGSEP"
 }
 
 # $1: list of paths like this:
