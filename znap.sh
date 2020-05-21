@@ -10,6 +10,7 @@ DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take 
 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
+# TODO: let sudo be sudo
 sudo=''
 SEP='\t'
 LINESEP='\n'
@@ -63,6 +64,26 @@ merge_paths(){
 read_log(){
     logfile=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
     column -t -s$'\t' <"${logfile}"
+    # could use -L flag to keep empty lines.
+}
+
+# if called without argument, equivalent to read_log
+# otherwise the first argument is a regular expression to filter the affected datasets
+read_advanced_log(){
+    if [[ -z $1 ]]; then
+        read_log
+        return
+    fi
+    
+    # there is an argument.
+    # We shall only output what matches the regexp
+    full_log=$(read_log)
+    while IFS= read -r line; do
+        # if line begins with whitespace
+        if printf '%s' "$line" | grep -Eq "^\s"; then echo "$line"; fi;
+            # TODO: skip the lines that we don't want
+        done < <(printf '%s' "$full_log")
+
 }
 
 # ---- Parsing ----
@@ -74,7 +95,7 @@ then
 fi
 
 if [[ "x$1" = "xlog" ]]; then
-    read_log
+    read_advanced_log $2
     exit 0
 fi
 
