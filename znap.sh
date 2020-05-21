@@ -3,6 +3,7 @@
 set -e
 
 # --- Customizable Options ---
+ZNAPLOGFILEDIR='./'
 ZNAPLOGFILE='.znap_log'                         # where the logs are stored
 SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
 DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take snapshot of
@@ -29,7 +30,19 @@ EOF
 # $1: The target dataset full path
 # $2: The message
 znaplog(){
-echo -e >>"${ZNAPLOGFILE}" "$1$SUFFIX$SEP$2$BIGSEP"
+    echo -e >>"${ZNAPLOGFILE}" "$1$SUFFIX$SEP$2$BIGSEP"
+}
+
+# $1: list of paths like this:
+#     parts=("/etc", "znap", "file/")
+merge_paths(){
+    args=("$@")
+    printf '%s/' "${args[@]%/}"
+    # https://unix.stackexchange.com/a/23213/66736
+    # if this magic is not cool, you could also just add a slash between each input part.
+    # Because /etc/znap/file/ and /etch//znap/////file are the same.
+    # What this magic does is use printf to remove any trailing slashes from each part,
+    # then append one.
 }
 
 # ---- Parsing ----
@@ -99,9 +112,11 @@ fi
 
 # store the commit messages first, so that they will be part of the snapshots
 # create log dir # TODO: place the logs actually in the dataset roots
-$sudo mkdir -p "./"
+$sudo mkdir -p "${ZNAPLOGFILEDIR}"
 $sudo touch "${ZNAPLOGFILE}"
 datasetpath="$target"
+logfilepath=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
+echo "logfilepath: "$logfilepath
 znaplog "$datasetpath" "$commit_message"
 
 

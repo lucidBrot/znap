@@ -14,7 +14,7 @@ Opens a text editor for that file.
 
 ### Why?
 Because I really don't want to type the date command again and again.
-And `znap` keeps track of commit messages in a file per dataset:
+And `znap` keeps track of commit messages in a file:
 
 ```
 tank/ds1/u18@2005082034     swap partition instead of /swapfile.
