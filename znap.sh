@@ -26,6 +26,8 @@ Usage:
     znap [-t tank/DATASET] -m "COMMIT_MESSAGE"       creates a snapshot
          [-q]                                        quiet
          [-r/-R]                                     recursive (default) / not recursive
+
+    znap log                                         outputs stored commit messages
 EOF
 }
 
@@ -47,12 +49,20 @@ znaplog(){
 #     parts=("/etc", "znap", "file/")
 merge_paths(){
     args=("$@")
-    printf '%s/' "${args[@]%/}"
+    ret="$(printf '%s/' "${args[@]%/}")"
     # https://unix.stackexchange.com/a/23213/66736
     # if this magic is not cool, you could also just add a slash between each input part.
     # Because /etc/znap/file/ and /etch//znap/////file are the same.
     # What this magic does is use printf to remove any trailing slashes from each part,
     # then append one.
+
+    # remove last trailing slash
+    echo "${ret%/}"
+}
+
+read_log(){
+    logfile=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
+    column -t -s$'\t' <"${logfile}"
 }
 
 # ---- Parsing ----
@@ -61,6 +71,11 @@ if [ -z "$1" ];
 then
     usage
     exit 1
+fi
+
+if [[ "x$1" == "xlog" ]]; then
+    read_log
+    exit 0
 fi
 
 verbosity=2
