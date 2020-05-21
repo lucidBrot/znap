@@ -42,8 +42,7 @@ znaplog(){
     splitted_msg_with_initial_tab=$(echo "$the_message" | tr '\n' '\0' | xargs -0 -n1 echo $'\t')
     splitted_msg=${splitted_msg_with_initial_tab#?}
     msg_as_lines=$(echo "$splitted_msg" | sed -r "s/(.{$MSGWIDTH})/\1$LINESEP$SEP/g")
-    echo -e >>"${ZNAPLOGFILE}" "$1$SEP$msg_as_lines$BIGSEP"
-    # todo write as sudo?
+    echo -e "$1$SEP$msg_as_lines$BIGSEP" | $sudo tee -a "${ZNAPLOGFILE}" >/dev/null
 }
 
 # $1: list of paths like this:
@@ -151,11 +150,10 @@ fi
 znaplog "$snapshotpath" "$commit_message"
 
 # actually perform the snapshot
+# recursively, if that is not explicitly disallowed by the user
 r_flag='-r'
 if [[ recursiveness = 0 ]]; then
     r_flag=''
 fi
 $sudo zfs snapshot $r_flag $snapshotpath
-#TODO: actually run the snapshot
-#       including the -r / -R switch
 #TODO: see log of only one dataset.
