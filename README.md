@@ -1,10 +1,14 @@
 ### snapshot with commit message
 ```bash
-znap -t tank/ds1/u18 -m COMMIT_MESSAGE
+znap -t tank/ds1/u18 -m "before wiping my boot partition"
+# or
+znap -m "will reinstall OS soon"
 ```
 
 Creates a snapshot of the dataset `tank/ds1/u18` and stores `COMMIT_MESSAGE` in a file at `/opt/znap` (modify the script to your liking).
 Be aware that the commit messages are only in one file and hence will not automatically be backed up. But they are written before the snapshot is taken, so if you snapshot the dataset where the logfile is stored, it will save the new commit message as well.
+
+You can specify the default dataset that is used when you omit the `-t flag`.
 
 ### log
 
