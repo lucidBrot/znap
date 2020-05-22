@@ -106,7 +106,7 @@ fi
 
 verbosity=2
 recursiveness=1
-while getopts ":t:hm:qrRf:i:" arg; do
+while getopts "t:m:f:i:qrRh" arg; do
     case $arg in
         t)
             target=${OPTARG}
@@ -133,7 +133,7 @@ while getopts ":t:hm:qrRf:i:" arg; do
             ;;
         h | *)
             usage
-            exit 0
+            exit 1
             ;;
     esac
 done
