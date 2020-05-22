@@ -35,6 +35,7 @@ Usage:
                                                      cannot be used with -f
 
     znap log                                         outputs stored commit messages
+    znap ls                                          shorthand for \`zfs list -t snap\`
 EOF
 }
 
@@ -127,6 +128,11 @@ fi
 
 if [[ "x$1" = "xlog" ]]; then
     read_advanced_log $2
+    exit 0
+fi
+
+if [[ "x$1" = "xls" ]]; then
+    $zfs list -t snap -s creation
     exit 0
 fi
 
