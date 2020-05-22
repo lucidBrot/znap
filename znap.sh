@@ -3,10 +3,11 @@
 set -e
 
 # --- Customizable Options ---
-ZNAPLOGFILEDIR='./'
-ZNAPLOGFILE='.znap_log'                         # where the logs are stored
+ZNAPLOGFILEDIR='./'                             # where the logs are stored (directory)
+ZNAPLOGFILE='.znap_log'                         # where the logs are stored (file)
+                                                # ==> they will be stored at directory/file
 SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
-DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take snapshot of
+DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take snapshot of when no -t is given
 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
@@ -27,6 +28,10 @@ Usage:
     znap [-t tank/DATASET] -m "COMMIT_MESSAGE"       creates a snapshot
          [-q]                                        quiet
          [-r/-R]                                     recursive (default) / not recursive
+         [-f tank/DATASET@today]                     full snapshot name. Replaces -t and the suffix
+         [-i SOMETHING]                              infix ==> tank/DATASET@SOMETHING200522
+                                                     i.e. target@infix+suffix
+                                                     cannot be used with -f
 
     znap log                                         outputs stored commit messages
 EOF
@@ -101,7 +106,7 @@ fi
 
 verbosity=2
 recursiveness=1
-while getopts ":t:hm:qrR" arg; do
+while getopts ":t:hm:qrRf:i:" arg; do
     case $arg in
         t)
             target=${OPTARG}
@@ -120,12 +125,38 @@ while getopts ":t:hm:qrR" arg; do
             recursiveness=0
             set_R=1
             ;;
+        f)
+            fullpath=${OPTARG}
+            ;;
+        i)
+            infix=${OPTARG}
+            ;;
         h | *)
             usage
             exit 0
             ;;
     esac
 done
+
+# if fullpath is set, don't allow clashing flags
+if [[ ! -z "$fullpath" ]]; then
+    if [[ ! -z "$target" ]]; then
+        echo "You can't use -t when already using -f."
+        usage
+        exit 1
+    fi
+    if [[ ! -z "$infix" ]]; then
+        echo "You can't use -i when already using -f."
+        usage
+        exit 1
+    fi
+fi
+
+# set target and suffix based on fullpath so that the remaining code flows don't need to be modified
+if [[ ! -z "$fullpath" ]]; then
+    target="$fullpath"
+    SUFFIX=""
+fi
 
 # verify that target and message are set
 if [ -z "$target" ] || [ -z "$commit_message" ]; then
@@ -149,6 +180,11 @@ if [[ ! -z $set_r && ! -z $set_R ]]; then
     exit 1
 fi
 
+# if -i set an infix, we want to plant that at the start of the SUFFIX, right after the '@'
+if [[ ! -z "$infix" ]]; then
+    SUFFIX="@$infix${SUFFIX#'@'}"
+fi
+
 # --- Snapshot Creation ---
 # store the commit messages first, so that they will be part of the snapshots
 # create log dir 
@@ -164,7 +200,7 @@ if [[ $verbosity > 0 ]] ; then
     echo -e "suffix:\t\t$SUFFIX"
 fi
 if [[ $verbosity > 1 ]] ; then
-    echo -e "logfilepath:\t\t$logfilepath"
+    echo -e "logfile:\t$logfilepath"
 fi
 
 # store the commit message to file
@@ -178,3 +214,4 @@ if [[ recursiveness = 0 ]]; then
 fi
 $sudo zfs snapshot $r_flag $snapshotpath
 #TODO: see log of only one dataset.
+#TODO: handle case when snapshot already exists.
