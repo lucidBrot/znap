@@ -85,23 +85,25 @@ read_advanced_log(){
     # We shall only output what matches the regexp
     full_log=$(read_log)
     user_wants_to_see_this_entry=false
-    while IFS= read -r line; do
+    # implementation detail: https://stackoverflow.com/a/12919766/2550406
+    #    According to the POSIX spec for the read command, it should return a nonzero status if "End-of-file was detected or an error occurred." Since EOF is detected as it reads the last "line", it sets $line and then returns an error status, and the error status prevents the loop from executing on that last "line". The solution is easy: make the loop execute if the read command succeeds OR if anything was read into $line.
+    # that's why I have that "|| [ -n "$line" ]" part in the loop condition
+    while IFS= read -r line || [ -n "$line" ]; do
         # if line begins with whitespace, it is part of the current line
         # if it doesn't begin with whitespace, it is a new entry
         
         # if line begins with whitespace, print it iff we are currently in an entry the user wants to see
-        if printf '%s' "$line" | grep -Eq "^\s"; then 
+        if grep -Eq "^\s" < <(printf '%s' "$line"); then 
             if $user_wants_to_see_this_entry; then echo "$line"; fi
         else
             # in this case the line is the start of a new entry
             user_wants_to_see_this_entry=false
-            if printf '%s' "$line" | grep -Eq "$target_regex"; then
+            if grep -Eq "$target_regex" < <(printf '%s' "$line"); then
                 user_wants_to_see_this_entry=true
                 echo "$line"
             fi
         fi
     done < <(printf '%s' "$full_log")
-
 }
 
 # ---- Parsing ----
