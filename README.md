@@ -62,3 +62,24 @@ To search for only `tank` but not for `tank/ds1`, you would for example perform 
 
 Because I really don't want to type the date command again and again.
 And `znap` keeps track of commit messages in a file. I sync that file to my desktop to keep track of the changes I made on my laptop.
+
+### Are there no other tools that do this?
+
+I don't know. I'm a beginner with ZFS.
+
+### Installation
+
+1. save `znap.sh` as `znap` in `/opt/znap/` 
+   (or wherever you'd like to have it)
+
+2. If you want to, modify other settings variables in the script. E.g. specify where the logfile is stored by modifying the variable the variable `ZNAPLOGFILEDIR`. Or the `SUFFIX`.
+
+3. `chmod +x /opt/znap/znap`
+
+4. Add the following line to your `~/.bashrc`
+
+   ```bash
+   alias znap='sudo /opt/opt/znap'
+   ```
+
+   
