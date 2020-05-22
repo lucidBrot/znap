@@ -3,7 +3,7 @@
 set -e
 
 # --- Customizable Options ---
-ZNAPLOGFILEDIR='./'                             # where the logs are stored (directory)
+ZNAPLOGFILEDIR='/opt/znap/znap'                             # where the logs are stored (directory)
 ZNAPLOGFILE='.znap_log'                         # where the logs are stored (file)
                                                 # ==> they will be stored at directory/file
 SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
@@ -232,7 +232,7 @@ if [[ $verbosity -gt 1 ]] ; then
 fi
 
 # verify that the snapshot does not exist yet
-if zfs_snapshot_exists "$snapshotpath"; then
+if zfs_snapshot_exists "$snapshotpath" >/dev/null 2>&1; then
     echo -e "snapshot $snapshotpath already exists! Aborting!"
     exit 3
 fi
@@ -243,7 +243,7 @@ znaplog "$snapshotpath" "$commit_message"
 # actually perform the snapshot
 # recursively, if that is not explicitly disallowed by the user
 r_flag='-r'
-if $set_R ; then
+if [[ $set_R = 1 ]] ; then
     r_flag=''
 fi
 succ=$sudo $zfs snapshot "$r_flag" "$snapshotpath"
