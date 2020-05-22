@@ -227,4 +227,3 @@ fi
 $sudo zfs snapshot "$r_flag" "$snapshotpath"
 #TODO: see log of only one dataset.
 #TODO: handle case when snapshot already exists.
-#TODO: shellcheck
