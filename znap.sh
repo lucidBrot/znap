@@ -3,7 +3,7 @@
 set -e
 
 # --- Customizable Options ---
-ZNAPLOGFILEDIR='/opt/znap/znap'                             # where the logs are stored (directory)
+ZNAPLOGFILEDIR='/opt/znap'                             # where the logs are stored (directory)
 ZNAPLOGFILE='.znap_log'                         # where the logs are stored (file)
                                                 # ==> they will be stored at directory/file
 SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
@@ -11,9 +11,8 @@ DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take 
 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
-# TODO: let sudo be sudo and zfs be zfs
-sudo='' # set to '' for debugging on a system without sudo
-zfs='echo' # set to 'echo' for debugging
+sudo='sudo' # set to '' for debugging on a system without sudo
+zfs='zfs' # set to 'echo' for debugging
 SEP='\t'
 LINESEP='\n'
 BIGSEP='\n'
@@ -45,12 +44,13 @@ EOF
 # The stored output is for viewing with `column -t -s$'\t' <.znap_log`
 znaplog(){
     the_message=$2
+    logfile=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
     # split the message on user-set newlines so that they will remain. Prefix each of them with a tab character.
     # That includes the first line, so we will later have to remove that again.
     splitted_msg_with_initial_tab=$(echo "$the_message" | tr '\n' '\0' | xargs -0 -n1 echo $'\t')
     splitted_msg=${splitted_msg_with_initial_tab#?}
     msg_as_lines=$(echo "$splitted_msg" | sed -r "s/(.{$MSGWIDTH})/\1$LINESEP$SEP/g")
-    echo -e "$1$SEP$msg_as_lines$BIGSEP" | $sudo tee -a "${ZNAPLOGFILE}" >/dev/null
+    echo -e "$1$SEP$msg_as_lines$BIGSEP" | $sudo tee -a "${logfile}" >/dev/null
 }
 
 # $1: list of paths like this:
