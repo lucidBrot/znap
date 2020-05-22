@@ -81,13 +81,26 @@ read_advanced_log(){
     fi
     
     # there is an argument.
+    target_regex="$1"
     # We shall only output what matches the regexp
     full_log=$(read_log)
+    user_wants_to_see_this_entry=false
     while IFS= read -r line; do
-        # if line begins with whitespace
-        if printf '%s' "$line" | grep -Eq "^\s"; then echo "$line"; fi;
-            # TODO: skip the lines that we don't want
-        done < <(printf '%s' "$full_log")
+        # if line begins with whitespace, it is part of the current line
+        # if it doesn't begin with whitespace, it is a new entry
+        
+        # if line begins with whitespace, print it iff we are currently in an entry the user wants to see
+        if printf '%s' "$line" | grep -Eq "^\s"; then 
+            if $user_wants_to_see_this_entry; then echo "$line"; fi
+        else
+            # in this case the line is the start of a new entry
+            user_wants_to_see_this_entry=false
+            if printf '%s' "$line" | grep -Eq "$target_regex"; then
+                user_wants_to_see_this_entry=true
+                echo "$line"
+            fi
+        fi
+    done < <(printf '%s' "$full_log")
 
 }
 
@@ -105,7 +118,6 @@ if [[ "x$1" = "xlog" ]]; then
 fi
 
 verbosity=2
-recursiveness=1
 while getopts "t:m:f:i:qrRh" arg; do
     case $arg in
         t)
@@ -118,11 +130,9 @@ while getopts "t:m:f:i:qrRh" arg; do
             verbosity=0
             ;;
         r)
-            recursiveness=1
             set_r=1
             ;;
         R)
-            recursiveness=0
             set_R=1
             ;;
         f)
@@ -161,7 +171,7 @@ fi
 # verify that target and message are set
 if [ -z "$target" ] || [ -z "$commit_message" ]; then
     if [[ -z "$target" && ! -z "$commit_message" ]]; then
-        if [[ $verbosity > 0 ]] ; then
+        if [[ $verbosity -gt 0 ]] ; then
             echo "Defaulting to dataset ${DEFAULT_DATASET} because you did not specify a -t target."
         fi
         target=${DEFAULT_DATASET}
@@ -194,12 +204,12 @@ snapshotpath="$target$SUFFIX"
 logfilepath=$(merge_paths "$ZNAPLOGFILEDIR" "$ZNAPLOGFILE")
 
 # log a few things to stdout
-if [[ $verbosity > 0 ]] ; then
+if [[ $verbosity -gt 0 ]] ; then
     echo -e "message:\t$commit_message"
     echo -e "target:\t\t$target"
     echo -e "suffix:\t\t$SUFFIX"
 fi
-if [[ $verbosity > 1 ]] ; then
+if [[ $verbosity -gt 1 ]] ; then
     echo -e "logfile:\t$logfilepath"
 fi
 
@@ -209,9 +219,10 @@ znaplog "$snapshotpath" "$commit_message"
 # actually perform the snapshot
 # recursively, if that is not explicitly disallowed by the user
 r_flag='-r'
-if [[ recursiveness = 0 ]]; then
+if "$set_R" ; then
     r_flag=''
 fi
-$sudo zfs snapshot $r_flag $snapshotpath
+$sudo zfs snapshot "$r_flag" "$snapshotpath"
 #TODO: see log of only one dataset.
 #TODO: handle case when snapshot already exists.
+#TODO: shellcheck
