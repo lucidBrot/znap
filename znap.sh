@@ -12,8 +12,8 @@ DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
 # TODO: let sudo be sudo and zfs be zfs
-sudo=''
-zfs='echo'
+sudo='' # set to '' for debugging on a system without sudo
+zfs='echo' # set to 'echo' for debugging
 SEP='\t'
 LINESEP='\n'
 BIGSEP='\n'
