@@ -11,8 +11,9 @@ DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take 
 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
-# TODO: let sudo be sudo
+# TODO: let sudo be sudo and zfs be zfs
 sudo=''
+zfs='echo'
 SEP='\t'
 LINESEP='\n'
 BIGSEP='\n'
@@ -106,6 +107,16 @@ read_advanced_log(){
     done < <(printf '%s' "$full_log")
 }
 
+# $1: snapshot like "tank/ds1@beforeDefcon123"
+# returns 0 if snapshot exists, otherwise 1
+zfs_snapshot_exists(){
+    if $zfs get compression "$1"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # ---- Parsing ----
 
 if [ -z "$1" ];
@@ -197,7 +208,6 @@ if [[ ! -z "$infix" ]]; then
     SUFFIX="@$infix${SUFFIX#'@'}"
 fi
 
-# --- Snapshot Creation ---
 # store the commit messages first, so that they will be part of the snapshots
 # create log dir 
 $sudo mkdir -p "${ZNAPLOGFILEDIR}"
@@ -215,15 +225,24 @@ if [[ $verbosity -gt 1 ]] ; then
     echo -e "logfile:\t$logfilepath"
 fi
 
+# verify that the snapshot does not exist yet
+if zfs_snapshot_exists "$snapshotpath"; then
+    echo -e "snapshot $snapshotpath already exists! Aborting!"
+    exit 3
+fi
+
 # store the commit message to file
 znaplog "$snapshotpath" "$commit_message"
 
 # actually perform the snapshot
 # recursively, if that is not explicitly disallowed by the user
 r_flag='-r'
-if "$set_R" ; then
+if $set_R ; then
     r_flag=''
 fi
-$sudo zfs snapshot "$r_flag" "$snapshotpath"
-#TODO: see log of only one dataset.
-#TODO: handle case when snapshot already exists.
+succ=$sudo $zfs snapshot "$r_flag" "$snapshotpath"
+
+if ! $succ; then
+    echo -e "something went wrong while calling zfs to actually create the snapshot."
+    echo -e "The commit message was stored in the logfile. But no guarantees about the zfs state!"
+fi
