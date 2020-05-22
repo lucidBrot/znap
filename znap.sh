@@ -1,5 +1,6 @@
 #!/bin/bash
 # (c) LucidBrot 2020
+# version 1.0.0
 set -e
 
 # --- Customizable Options ---
