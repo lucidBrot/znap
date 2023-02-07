@@ -8,7 +8,7 @@ ZNAPLOGFILEDIR='/opt/znap'                             # where the logs are stor
 ZNAPLOGFILE='.znap_log'                         # where the logs are stored (file)
                                                 # ==> they will be stored at directory/file
 SUFFIX='@'`date +\%y\%m\%d\%H\%M`               # see `man date` for format or provide any other suffix
-DEFAULT_DATASET='tank/ds1'                      # set to target dataset to take snapshot of when no -t is given
+DEFAULT_DATASET='tank/enc/ds1'                      # set to target dataset to take snapshot of when no -t is given
 
 # --- Programming Options ---
 # set to sudo when used on a platform that has sudo
@@ -109,7 +109,7 @@ read_advanced_log(){
     done < <(printf '%s' "$full_log")
 }
 
-# $1: snapshot like "tank/ds1@beforeDefcon123"
+# $1: snapshot like "tank/enc/ds1@beforeDefcon123"
 # returns 0 if snapshot exists, otherwise 1
 zfs_snapshot_exists(){
     if $zfs get compression "$1"; then
